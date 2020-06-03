@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package sms;
+
+service Sms {
+  rpc Send (SmsRequest) returns (SmsResponse) {}
+}
+
+message SmsRequest {
+  string phone = 1;
+  string text = 2;
+}
+
+message SmsResponse {
+  string code = 1;
+}
