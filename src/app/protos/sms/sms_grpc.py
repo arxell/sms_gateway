@@ -4,16 +4,16 @@
 import abc
 import typing
 
-import grpclib.const
 import grpclib.client
-if typing.TYPE_CHECKING:
-    import grpclib.server
+import grpclib.const
 
 from . import sms_pb2
 
+if typing.TYPE_CHECKING:
+    import grpclib.server
+
 
 class SmsBase(abc.ABC):
-
     @abc.abstractmethod
     async def Send(self, stream: 'grpclib.server.Stream[sms_pb2.SmsRequest, sms_pb2.SmsResponse]') -> None:
         pass
@@ -21,20 +21,11 @@ class SmsBase(abc.ABC):
     def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
         return {
             '/sms.Sms/Send': grpclib.const.Handler(
-                self.Send,
-                grpclib.const.Cardinality.UNARY_UNARY,
-                sms_pb2.SmsRequest,
-                sms_pb2.SmsResponse,
-            ),
+                self.Send, grpclib.const.Cardinality.UNARY_UNARY, sms_pb2.SmsRequest, sms_pb2.SmsResponse
+            )
         }
 
 
 class SmsStub:
-
     def __init__(self, channel: grpclib.client.Channel) -> None:
-        self.Send = grpclib.client.UnaryUnaryMethod(
-            channel,
-            '/sms.Sms/Send',
-            sms_pb2.SmsRequest,
-            sms_pb2.SmsResponse,
-        )
+        self.Send = grpclib.client.UnaryUnaryMethod(channel, '/sms.Sms/Send', sms_pb2.SmsRequest, sms_pb2.SmsResponse)

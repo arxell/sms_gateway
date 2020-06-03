@@ -1,13 +1,10 @@
 import logging
 
 from fastapi import APIRouter
-from fastapi.responses import PlainTextResponse
 
-from app.conf.settings import Settings, settings
 from app.sms.client import sms_client
 
-from .datamodels import (ReadyResponse, SmsSendRequest, SmsSendResponse,
-                         VersionResponse)
+from .datamodels import SmsSendRequest, SmsSendResponse
 
 router = APIRouter()
 

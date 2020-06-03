@@ -39,7 +39,7 @@ class SmsClient:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 logger.info(resp.status)
-                _id = await resp.text()
+                _id: str = await resp.text()
                 logger.info(_id)
         return _id
 

@@ -14,10 +14,10 @@ class SmsStub(object):
             channel: A grpc.Channel.
         """
         self.Send = channel.unary_unary(
-                '/sms.Sms/Send',
-                request_serializer=sms__pb2.SmsRequest.SerializeToString,
-                response_deserializer=sms__pb2.SmsResponse.FromString,
-                )
+            '/sms.Sms/Send',
+            request_serializer=sms__pb2.SmsRequest.SerializeToString,
+            response_deserializer=sms__pb2.SmsResponse.FromString,
+        )
 
 
 class SmsServicer(object):
@@ -32,33 +32,43 @@ class SmsServicer(object):
 
 def add_SmsServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Send': grpc.unary_unary_rpc_method_handler(
-                    servicer.Send,
-                    request_deserializer=sms__pb2.SmsRequest.FromString,
-                    response_serializer=sms__pb2.SmsResponse.SerializeToString,
-            ),
+        'Send': grpc.unary_unary_rpc_method_handler(
+            servicer.Send,
+            request_deserializer=sms__pb2.SmsRequest.FromString,
+            response_serializer=sms__pb2.SmsResponse.SerializeToString,
+        )
     }
-    generic_handler = grpc.method_handlers_generic_handler(
-            'sms.Sms', rpc_method_handlers)
+    generic_handler = grpc.method_handlers_generic_handler('sms.Sms', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class Sms(object):
     """Missing associated documentation comment in .proto file"""
 
     @staticmethod
-    def Send(request,
+    def Send(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/sms.Sms/Send',
+            '/sms.Sms/Send',
             sms__pb2.SmsRequest.SerializeToString,
             sms__pb2.SmsResponse.FromString,
-            options, channel_credentials,
-            call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
