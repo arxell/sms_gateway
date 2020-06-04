@@ -1,0 +1,2 @@
+def tests():
+    assert True

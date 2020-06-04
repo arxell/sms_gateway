@@ -83,13 +83,13 @@ check: format tests
 
 # RUN
 run-server:
-	cd $(SRC) && python app.py run-server
+	cd $(SRC) && python main.py run-server
 
 check-server:
-	cd $(SRC) && python app.py check-server
+	cd $(SRC) && python main.py check-server
 
 send-sms:
-	cd $(SRC) && python app.py send-sms
+	cd $(SRC) && python main.py send-sms
 
 run-deps:
 	docker-compose -f docker-compose.yml up -d --build kafka zookeeper
