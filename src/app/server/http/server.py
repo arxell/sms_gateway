@@ -5,8 +5,8 @@ from fastapi import FastAPI
 
 from app.conf.logging import _get_configure_logging
 from app.conf.settings import settings
-from app.http_server.handler.maintenance import router as maintenance_router
-from app.http_server.handler.sms import router as sms_router
+from app.server.http.handler.maintenance import router as maintenance_router
+from app.server.http.handler.sms import router as sms_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -4,8 +4,8 @@ import uvicorn
 from grpclib.server import Server
 
 from app.conf.settings import settings
-from app.grpc_server.server import get_grpc_server
-from app.http_server.server import get_debug_http_server
+from app.server.grpc.server import get_grpc_server
+from app.server.http.server import get_debug_http_server
 
 logger = logging.getLogger(__name__)
 
