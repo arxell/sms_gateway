@@ -20,6 +20,14 @@ class SmscSettings(BaseSettings):
     password: str = Field('a56f8fee-a978-419f-87c2-91cbfc084a4d', env='SMSC_API_PASSWORD')
 
 
+class IQSmsSettings(BaseSettings):
+    host: str = Field('http://api.iqsms.ru', env='IQSMS_API_HOST')
+    port: int = Field(80, env='IQSMS_API_PORT')
+    timeout: int = Field(3, env='IQSMS_API_TIMEOUT')
+    login: str = Field('z1591267756939', env='IQSMS_API_LOGIN')
+    password: str = Field('130994', env='IQSMS_API_PASSWORD')
+
+
 class Settings(BaseSettings):
     grpc_host: str = Field('127.0.0.1', env='GRPC_HOST')
     grpc_port: int = Field(50051, env='GRPC_PORT')
@@ -45,6 +53,7 @@ class Settings(BaseSettings):
     # stream_telecom
     stream_telecom: StreamTelecomSettings = StreamTelecomSettings()
     smsc: SmscSettings = SmscSettings()
+    iqsms: IQSmsSettings = IQSmsSettings()
 
     class Config:
         env_prefix = ''
