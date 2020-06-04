@@ -1,5 +1,4 @@
-import logging.config
-from logging import Formatter, LogRecord
+from logging import INFO, Formatter, LogRecord, config
 from typing import Any, Dict
 
 from app.conf.settings import settings
@@ -29,9 +28,9 @@ def _get_configure_logging() -> Dict[str, Any]:
             'default': {'format': '%(asctime)s %(levelname)s %(name)s %(message)s %(props)s', 'class': formatter}
         },
         'handlers': {'default': {'class': 'logging.StreamHandler', 'formatter': 'default'}},
-        'loggers': {'': {'handlers': ['default'], 'level': logging.INFO}},
+        'loggers': {'': {'handlers': ['default'], 'level': INFO}},
     }
 
 
 def configure_logging() -> None:
-    logging.config.dictConfig(_get_configure_logging())
+    config.dictConfig(_get_configure_logging())
