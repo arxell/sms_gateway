@@ -3,6 +3,23 @@ from typing import Optional
 from pydantic import AnyUrl, BaseSettings, Field
 
 
+class StreamTelecomSettings(BaseSettings):
+    host: str = Field('http://gateway.api.sc', env='STREAM_TELECOM_API_HOST')
+    port: int = Field(80, env='STREAM_TELECOM_API_PORT')
+    timeout: int = Field(3, env='STREAM_TELECOM_API_TIMEOUT')
+    username: str = Field('SMS Info', env='STREAM_TELECOM_API_USERNAME')
+    login: str = Field('79636351616', env='STREAM_TELECOM_API_LOGIN')
+    password: str = Field('oCcOwbecOK', env='STREAM_TELECOM_API_PASSWORD')
+
+
+class SmscSettings(BaseSettings):
+    host: str = Field('http://smsc.ru', env='SMSC_API_HOST')
+    port: int = Field(80, env='SMSC_API_PORT')
+    timeout: int = Field(3, env='SMSC_API_TIMEOUT')
+    login: str = Field('arxell', env='SMSC_API_LOGIN')
+    password: str = Field('a56f8fee-a978-419f-87c2-91cbfc084a4d', env='SMSC_API_PASSWORD')
+
+
 class Settings(BaseSettings):
     grpc_host: str = Field('127.0.0.1', env='GRPC_HOST')
     grpc_port: int = Field(50051, env='GRPC_PORT')
@@ -24,6 +41,10 @@ class Settings(BaseSettings):
     bamboo_build_date: str = Field('bamboo_build_date', env='BAMBOO_BUILD_DATE')
     build_number: str = Field('build_number', env='BAMBOO_BUILD_NUMBER')
     git_short_hash: str = Field('git_short_hash', env='GIT_COMMIT_HASH')
+
+    # stream_telecom
+    stream_telecom: StreamTelecomSettings = StreamTelecomSettings()
+    smsc: SmscSettings = SmscSettings()
 
     class Config:
         env_prefix = ''
