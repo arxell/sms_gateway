@@ -16,8 +16,7 @@ class SendSmsService:
     @classmethod
     async def send(cls, phone: str, text: str) -> str:
         sms_provider_name = random.choice(list(SmsProvider))
-        SMS_PROVIDER_MAP[sms_provider_name]
-        _id = '123'  # await _client.send(phone, text)
+        _id = await SMS_PROVIDER_MAP[sms_provider_name].send(phone, text)
 
         async with connection_context() as conn:
             await SmsMessage(provider_name=sms_provider_name, provider_message_id=_id).save(conn)
