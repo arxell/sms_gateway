@@ -30,7 +30,7 @@ class IQSmsSettings(BaseSettings):
 
 class DB(BaseSettings):
     host: str = Field('127.0.0.1', env='DB_HOST')
-    port: str = Field('5432', env='DEBUG_HTTP_PORT')
+    port: str = Field('5432', env='DB_PORT')
     username: str = Field('bet', env='DB_USERNAME')
     password: str = Field('bet', env='DB_PASSWORD')
     database: str = Field('msgs', env='DB_DATABASE')
