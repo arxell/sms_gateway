@@ -11,3 +11,6 @@ class SmsMessage(ModelBase):
     id = Column(Integer, primary_key=True, index=True)
     provider_name = Column(Enum(SmsProvider))
     provider_message_id = Column(String)
+
+    def __str__(self) -> str:
+        return f'{self.id} {self.provider_name} {self.provider_message_id}'

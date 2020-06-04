@@ -34,7 +34,7 @@ class DB(BaseSettings):
     username: str = Field('bet', env='DB_USERNAME')
     password: str = Field('bet', env='DB_PASSWORD')
     database: str = Field('msgs', env='DB_DATABASE')
-    echo: bool = Field(True, env='DB_ECHO')
+    echo: bool = Field(False, env='DB_ECHO')
     # That variables specifies internal pool of connections.
     # "After creation pool has minsize free connections and can grow up to maxsize ones."
     pool_min_size: int = Field(1, env='DB_POOL_MIN_SIZE')
