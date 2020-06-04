@@ -81,6 +81,17 @@ tests:
 
 check: format tests
 
+# migrations
+makemigrations:
+	cd $(SRC) && alembic -c migrations/alembic.ini revision -m "$(m)" --autogenerate
+
+migrate:
+	cd $(SRC) &&  alembic -c migrations/alembic.ini upgrade head
+
+migrate-downgrade:
+	cd $(SRC) && alembic -c migrations/alembic.ini downgrade base
+
+
 # RUN
 run-server:
 	cd $(SRC) && python main.py run-server

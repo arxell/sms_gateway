@@ -28,6 +28,22 @@ class IQSmsSettings(BaseSettings):
     password: str = Field('130994', env='IQSMS_API_PASSWORD')
 
 
+class DB(BaseSettings):
+    host: str = Field('127.0.0.1', env='DB_HOST')
+    port: str = Field('5432', env='DEBUG_HTTP_PORT')
+    username: str = Field('bet', env='DB_USERNAME')
+    password: str = Field('bet', env='DB_PASSWORD')
+    database: str = Field('msgs', env='DB_DATABASE')
+    echo: bool = Field(True, env='DB_ECHO')
+    # That variables specifies internal pool of connections.
+    # "After creation pool has minsize free connections and can grow up to maxsize ones."
+    pool_min_size: int = Field(1, env='DB_POOL_MIN_SIZE')
+    pool_max_size: int = Field(10, env='DB_POOL_MAX_SIZE')
+    # Each acquired connection recycles after specified seconds amount,
+    # "helps to deal with stale connections in pool"
+    pool_recycle_seconds: int = Field(60, env='DB_POOL_RECYCLE_SECONDS')
+
+
 class Settings(BaseSettings):
     grpc_host: str = Field('127.0.0.1', env='GRPC_HOST')
     grpc_port: int = Field(50051, env='GRPC_PORT')
@@ -50,10 +66,13 @@ class Settings(BaseSettings):
     build_number: str = Field('build_number', env='BAMBOO_BUILD_NUMBER')
     git_short_hash: str = Field('git_short_hash', env='GIT_COMMIT_HASH')
 
-    # stream_telecom
+    # sms
     stream_telecom: StreamTelecomSettings = StreamTelecomSettings()
     smsc: SmscSettings = SmscSettings()
     iqsms: IQSmsSettings = IQSmsSettings()
+
+    # db
+    db: DB = DB()
 
     class Config:
         env_prefix = ''

@@ -14,13 +14,7 @@ async def shutdown(signal: signal.Signals, app_registry: AppRegistry, loop: asyn
     logger.info(f'Received exit signal {signal.name}...')
     logger.info("=========Shutdown=========")
 
-    logger.info('Try to stop grpc_server ...')
-    app_registry.grpc_server.close()
-
-    logger.info('Try to stop debug_http_server ...')
-    app_registry.debug_http_server.handle_exit(signal, None)
-    # need to wait some time for gracefull shutdown uvicorn
-    await asyncio.sleep(1)
+    await app_registry.shutdown(signal)
 
     logger.info('Try to stop event loop')
     loop.stop()
@@ -41,7 +35,7 @@ def run_server() -> None:
         loop.add_signal_handler(s, lambda s=s: asyncio.create_task(shutdown(s, app_registry, loop)))
 
     # init asyncio tasks
-    tasks = [app_registry.run_grpc_server(), app_registry.run_debug_http_server()]
+    tasks = [app_registry.run_grpc_server(), app_registry.run_debug_http_server(), app_registry.setup_db()]
     try:
         logger.info('=========Start=========')
         loop.run_until_complete(asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION))

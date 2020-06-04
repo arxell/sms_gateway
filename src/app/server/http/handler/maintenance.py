@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 from app.conf.settings import Settings, settings
+from app.database.base import check_db_connection
 
 from .datamodels import ReadyResponse, VersionResponse
 
@@ -30,7 +31,11 @@ async def alive() -> PlainTextResponse:
 
 @router.get('/ready', response_model=ReadyResponse)
 async def ready() -> ReadyResponse:
-    return ReadyResponse(is_ready=True, checks=[ReadyResponse._ServiceCheck(service='kafka', is_ready=True, error='')])
+    is_postgres_ready, error = await check_db_connection()
+    return ReadyResponse(
+        is_ready=is_postgres_ready,
+        checks=[ReadyResponse._ServiceCheck(service='postgres', is_ready=is_postgres_ready, error=error)],
+    )
 
 
 @router.get('/config', response_model=Settings)
