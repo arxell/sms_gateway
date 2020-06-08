@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     smsc: SmscSettings = SmscSettings()
     iqsms: IQSmsSettings = IQSmsSettings()
 
+    # jwt
+    jwt_sectet: str = Field(None, env='JWT_SECRET')
+
     # db
     db: DB = DB()
 

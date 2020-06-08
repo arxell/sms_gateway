@@ -4,12 +4,12 @@ import jwt
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from app.conf.sentry import settings
+
 from .datamodels import LoginRequest, LoginResponse
 
 router = APIRouter()
-
 logger = logging.getLogger(__name__)
-secret = 'secret'
 error_responses = {401: {"model": LoginResponse._WrongPassword}, 404: {"model": LoginResponse._ClientNotFound}}
 
 
@@ -25,7 +25,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         # check log/pass in db
         return JSONResponse(status_code=401, content=error_responses[401]['model']().dict())
 
-    token = jwt.encode({'client_id': request.client_id}, secret, algorithm='HS256')
+    token = jwt.encode({'client_id': request.client_id}, settings.jwt_sectet, algorithm='HS256')
     return LoginResponse(token=token)
 
 
