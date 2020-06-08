@@ -1,6 +1,18 @@
 from pydantic import BaseModel
 
 
+# register
+class RegisterRequest(BaseModel):
+    phone: str
+
+
+class RegisterResponse(BaseModel):
+    class _AlreadyExists(BaseModel):
+        already_exists: str = 'already_exists'
+
+    status: str = 'OK'
+
+
 # login
 class LoginRequest(BaseModel):
     client_id: str
@@ -13,6 +25,9 @@ class LoginResponse(BaseModel):
 
     class _WrongPassword(BaseModel):
         code: str = 'wrong_password'
+
+    class _Unknown(BaseModel):
+        code: str = 'unknown'
 
     token: str
 

@@ -4,8 +4,10 @@ alembic==1.4.2
 async-timeout==3.0.1
 attrs==19.3.0
 certifi==2020.4.5.2
+cffi==1.14.0
 chardet==3.0.4
 click==7.1.2
+cryptography==2.9.2
 fastapi==0.55.1
 googleapis-common-protos==1.51.0
 grpcio==1.29.0
@@ -17,12 +19,14 @@ hpack==3.0.0
 httptools==0.1.1; sys_platform != "win32" and sys_platform != "cygwin" and platform_python_implementation != "PyPy"
 hyperframe==5.2.0
 idna==2.9
+jwt==1.0.0
 mako==1.1.3
 markupsafe==1.1.1
 multidict==4.7.6
 prometheus-client==0.8.0
 protobuf==3.12.2
 psycopg2-binary==2.8.5
+pycparser==2.20
 pydantic==1.5.1
 pyjwt==1.7.1
 python-dateutil==2.8.1
