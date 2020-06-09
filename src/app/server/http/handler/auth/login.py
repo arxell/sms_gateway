@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 from fastapi import APIRouter
 
+from app.datamodels import Unknown
 from app.domain.auth.service import AuthService
 from app.server.http.core import get_error
 
@@ -13,7 +14,7 @@ router = APIRouter()
 errors = {
     HTTPStatus.UNAUTHORIZED.value: {"model": LoginResponse._WrongPassword},
     HTTPStatus.NOT_FOUND.value: {"model": LoginResponse._ClientNotFound},
-    HTTPStatus.INTERNAL_SERVER_ERROR.value: {"model": LoginResponse._Unknown},
+    HTTPStatus.INTERNAL_SERVER_ERROR.value: {"model": Unknown},
 }
 
 
@@ -31,8 +32,3 @@ async def login(request: LoginRequest) -> LoginResponse:
             return get_error(errors, HTTPStatus.INTERNAL_SERVER_ERROR)
     else:
         return LoginResponse(token=check_code_result.data.token)
-
-
-@router.post('/client/logout')
-async def logout():
-    pass

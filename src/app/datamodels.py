@@ -3,6 +3,10 @@ from pydantic import BaseModel
 from .constants import Status
 
 
+class Unknown(BaseModel):
+    code: str = 'unknown'
+
+
 class MyModel(BaseModel):
     status: Status
 

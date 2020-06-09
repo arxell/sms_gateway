@@ -74,7 +74,6 @@ class AuthService:
     @classmethod
     async def _check_code(cls, phone: str, password: str) -> CheckCodeResult:
         async with connection_context() as conn:
-
             # get  client
             query = ClientTable.select().where(ClientTable.c.username == phone)
             result = await conn.execute(query)

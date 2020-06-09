@@ -7,9 +7,6 @@ class RegisterRequest(BaseModel):
 
 
 class RegisterResponse(BaseModel):
-    class _Unknown(BaseModel):
-        code: str = 'unknown'
-
     status: str = 'OK'
 
 
@@ -25,9 +22,6 @@ class LoginResponse(BaseModel):
 
     class _WrongPassword(BaseModel):
         code: str = 'wrong_password'
-
-    class _Unknown(BaseModel):
-        code: str = 'unknown'
 
     token: str
 

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 errors = {HTTPStatus.UNAUTHORIZED: {"model": CheckTokenResponse._InvalidToken}}
 
 
-@router.post('/token/check', response_model=CheckTokenRequest, responses=errors)
+@router.post('/token/check', response_model=CheckTokenResponse, responses=errors)
 async def check_token(request: CheckTokenRequest) -> CheckTokenResponse:
     logger.info(request)
     try:
