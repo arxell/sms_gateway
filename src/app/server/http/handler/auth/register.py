@@ -18,7 +18,7 @@ errors = {HTTPStatus.INTERNAL_SERVER_ERROR.value: {"model": Unknown}}
 async def register(request: RegisterRequest) -> RegisterResponse:
     logger.info(request)
 
-    login_result = await AuthService.send_code(request.phone)
+    login_result = await AuthService.send_code(request.username)
     if login_result.is_error:
         return get_error(errors, HTTPStatus.INTERNAL_SERVER_ERROR)
     else:

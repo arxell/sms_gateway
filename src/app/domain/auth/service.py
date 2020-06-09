@@ -1,5 +1,6 @@
 import logging
 import random
+from typing import Optional, Tuple
 
 import jwt
 from passlib.context import CryptContext
@@ -11,7 +12,7 @@ from app.database.base import connection_context
 from app.database.models import Client, ClientTable, SmsMessage, SmsMessageTable
 from app.domain.sms.service import SendSmsService
 
-from .datamodels import CheckCodeResult, SendCodeResult
+from .datamodels import CheckCodeResult, JWTPayload, SendCodeResult
 
 logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -33,9 +34,9 @@ class AuthService:
         return ''.join(random.choice('0123456789') for _ in range(settings.code_length))
 
     @classmethod
-    async def send_code(cls, phone: str) -> SendCodeResult:
+    async def send_code(cls, username: str) -> SendCodeResult:
         try:
-            result: SendCodeResult = await cls._send_code(phone)
+            result: SendCodeResult = await cls._send_code(username)
         except Exception:
             logger.exception('send_code unknown error')
             return SendCodeResult(status=Status.ERROR, error=SendCodeResult._Error.UNKNOWN)
@@ -43,9 +44,9 @@ class AuthService:
             return result
 
     @classmethod
-    async def check_code(cls, phone: str, password: str) -> CheckCodeResult:
+    async def check_code(cls, username: str, password: str) -> CheckCodeResult:
         try:
-            result: CheckCodeResult = await cls._check_code(phone, password)
+            result: CheckCodeResult = await cls._check_code(username, password)
         except Exception:
             logger.exception('check_code unknown error')
             return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.UNKNOWN)
@@ -53,31 +54,32 @@ class AuthService:
             return result
 
     @classmethod
-    def check_token(cls, token: str) -> bool:
+    def get_payload(cls, token: str) -> Tuple[Optional[JWTPayload], bool]:
         try:
-            jwt.decode(token, settings.jwt_sectet, algorithms=[settings.jwt_algorithm])
+            raw_payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+            payload = JWTPayload(**raw_payload)
         except Exception:
             logger.exception('jwt unknown error')
-            return False
+            return None, True
         else:
-            return True
+            return payload, False
 
     @classmethod
-    async def _send_code(cls, phone: str) -> SendCodeResult:
+    async def _send_code(cls, username: str) -> SendCodeResult:
         async with connection_context() as conn:
             # send sms
             code = cls.generate_random_code()
             logger.info(f'code: {code}')
-            send_sms_result = await SendSmsService.send(phone, code)
+            send_sms_result = await SendSmsService.send(username, code)
             if send_sms_result.is_error:
                 return SendCodeResult(status=Status.ERROR, error=SendCodeResult._Error.CANT_SEND_SMS)
 
             # get or create client
-            query = ClientTable.select().where(ClientTable.c.username == phone)
+            query = ClientTable.select().where(ClientTable.c.username == username)
             result = await conn.execute(query)
             client = await result.fetchone()
             if not client:
-                client = Client(username=phone)
+                client = Client(username=username)
                 await client.save(conn)
                 await client.refresh(conn)
             logger.info(client)
@@ -95,10 +97,10 @@ class AuthService:
         return SendCodeResult(status=Status.OK, data=SendCodeResult._Data(client_id=client.id, msg_id=msg.id))
 
     @classmethod
-    async def _check_code(cls, phone: str, password: str) -> CheckCodeResult:
+    async def _check_code(cls, username: str, password: str) -> CheckCodeResult:
         async with connection_context() as conn:
             # get  client
-            query = ClientTable.select().where(ClientTable.c.username == phone)
+            query = ClientTable.select().where(ClientTable.c.username == username)
             result = await conn.execute(query)
             client = await result.fetchone()
             if not client:
@@ -113,13 +115,14 @@ class AuthService:
             result = await conn.execute(query)
             sms_message = await result.fetchone()
             if not sms_message:
-                return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.SMS_MESSAGE_FOUND)
+                return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.SMS_MESSAGE_NOT_FOUND)
             if not cls.verify_password(password, sms_message.code):
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.INVALID_CODE)
 
             # generate token
+            jwt_payload = JWTPayload(username=username)
             try:
-                token = jwt.encode({'phone': phone}, settings.jwt_sectet, algorithm=settings.jwt_algorithm)
+                token = jwt.encode(jwt_payload.dict(), settings.jwt_secret, algorithm=settings.jwt_algorithm)
             except Exception:
                 logger.exception('jwt unknown error')
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.UNKNOWN)

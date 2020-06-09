@@ -16,6 +16,7 @@ errors = {HTTPStatus.UNAUTHORIZED.value: {"model": CheckTokenResponse._InvalidTo
 @router.post('/token/check', response_model=CheckTokenResponse, responses=errors)
 async def check_token(request: CheckTokenRequest) -> CheckTokenResponse:
     logger.info(request)
-    if not AuthService.check_token(request.token):
+    payload, error = AuthService.get_payload(request.token)
+    if error:
         return get_error(errors, HTTPStatus.UNAUTHORIZED)
-    return CheckTokenResponse(status='OK')
+    return CheckTokenResponse(username=payload.username)

@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from app.constants import SmsProvider
-from app.datamodels import MyModel
+from app.datamodels import MyResultModel
 
 
 class _Error(str, Enum):
@@ -16,6 +16,6 @@ class _Data(BaseModel):
     provider_msg_id: str
 
 
-class SendSmsServiceResult(MyModel):
+class SendSmsServiceResult(MyResultModel):
     error: Optional[_Error]
     data: Optional[_Data]

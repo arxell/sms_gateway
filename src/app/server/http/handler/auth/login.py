@@ -22,7 +22,7 @@ errors = {
 async def login(request: LoginRequest) -> LoginResponse:
     logger.info(request)
 
-    check_code_result = await AuthService.check_code(request.client_id, request.password)
+    check_code_result = await AuthService.check_code(request.username, request.password)
     if check_code_result.is_error:
         if check_code_result.error == check_code_result._Error.CLIENT_NOT_FOUND:
             return get_error(errors, HTTPStatus.NOT_FOUND)

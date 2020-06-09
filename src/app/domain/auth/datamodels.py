@@ -3,10 +3,14 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.datamodels import MyModel
+from app.datamodels import MyResultModel
 
 
-class SendCodeResult(MyModel):
+class JWTPayload(BaseModel):
+    username: str
+
+
+class SendCodeResult(MyResultModel):
     class _Error(str, Enum):
         CANT_SEND_SMS = 'CANT_SEND_SMS'
         UNKNOWN = 'UNKNOWN'
@@ -19,11 +23,11 @@ class SendCodeResult(MyModel):
     data: Optional[_Data]
 
 
-class CheckCodeResult(MyModel):
+class CheckCodeResult(MyResultModel):
     class _Error(str, Enum):
         UNKNOWN = 'UNKNOWN'
         CLIENT_NOT_FOUND = 'CLIENT_NOT_FOUND'
-        SMS_MESSAGE_FOUND = 'SMS_MESSAGE_FOUND'
+        SMS_MESSAGE_NOT_FOUND = 'SMS_MESSAGE_NOT_FOUND'
         INVALID_CODE = 'INVALID_CODE'
 
     class _Data(BaseModel):

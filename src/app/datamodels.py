@@ -7,7 +7,7 @@ class Unknown(BaseModel):
     code: str = 'unknown'
 
 
-class MyModel(BaseModel):
+class MyResultModel(BaseModel):
     status: Status
 
     class Config:

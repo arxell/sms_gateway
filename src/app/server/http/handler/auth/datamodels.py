@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 # register
 class RegisterRequest(BaseModel):
-    phone: str
+    username: str
 
 
 class RegisterResponse(BaseModel):
@@ -12,7 +12,7 @@ class RegisterResponse(BaseModel):
 
 # login
 class LoginRequest(BaseModel):
-    client_id: str
+    username: str
     password: str
 
 
@@ -35,4 +35,4 @@ class CheckTokenResponse(BaseModel):
     class _InvalidToken(BaseModel):
         code: str = 'invalid_token'
 
-    status: str = 'OK'
+    username: str
