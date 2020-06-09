@@ -14,7 +14,7 @@ from app.database.base import connection_context
 from app.database.models import Client, ClientTable, SmsMessage, SmsMessageTable
 from app.domain.sms.service import SendSmsService
 
-from .datamodels import CheckCodeResult, CheckTokenResult, JWTPayload, SendCodeResult
+from .datamodels import CheckCodeResult, CheckTokenResult, JWTPayload, RefreshTokenResult, SendCodeResult
 
 logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -66,6 +66,33 @@ class AuthService:
             logger.exception('jwt unknown error')
             return CheckTokenResult(status=Status.ERROR, error=CheckTokenResult._Error.UNKNOWN)
         return CheckTokenResult(status=Status.OK, jwt_payload=jwt_payload)
+
+    @classmethod
+    async def refresh_token(cls, token: str) -> RefreshTokenResult:
+        check_token_result = cls.check_token(token)
+        if check_token_result.is_error or not check_token_result.jwt_payload:
+            if check_token_result.is_error_expired:
+                return RefreshTokenResult(status=Status.ERROR, error=CheckTokenResult._Error.EXPIRED)
+            else:
+                return RefreshTokenResult(status=Status.ERROR, error=CheckTokenResult._Error.UNKNOWN)
+
+        async with connection_context() as conn:
+            # get client
+            query = ClientTable.select().where(ClientTable.c.username == check_token_result.jwt_payload.username)
+            result = await conn.execute(query)
+            client = await result.fetchone()
+            if not client:
+                return RefreshTokenResult(status=Status.ERROR, error=RefreshTokenResult._Error.CLIENT_NOT_FOUND)
+
+        # generate token
+        refresh_token = cls._get_refresh_token(client.username)
+        access_token = cls._get_access_token(client.username)
+        if not refresh_token or not access_token:
+            return RefreshTokenResult(status=Status.ERROR, error=CheckCodeResult._Error.UNKNOWN)
+
+        return RefreshTokenResult(
+            status=Status.OK, data=RefreshTokenResult._Data(refresh_token=refresh_token, access_token=access_token)
+        )
 
     @classmethod
     async def _send_code(cls, username: str) -> SendCodeResult:
@@ -156,6 +183,7 @@ class AuthService:
             if not refresh_token or not access_token:
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.UNKNOWN)
 
+            # mark code as used
             query = (
                 SmsMessageTable.update()
                 .values(used_at=dt.datetime.utcnow())

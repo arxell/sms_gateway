@@ -43,3 +43,13 @@ class CheckTokenResponse(BaseModel):
         code: str = 'token_expired'
 
     username: str
+
+
+# refresh
+class RefreshTokenRequest(BaseModel):
+    token: str
+
+
+class RefreshTokenResponse(BaseModel):
+    refresh_token: str
+    access_token: str

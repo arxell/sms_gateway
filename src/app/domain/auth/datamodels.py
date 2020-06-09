@@ -60,3 +60,18 @@ class CheckTokenResult(MyResultModel):
     @property
     def is_error_expired(self) -> bool:
         return self.error == self._Error.EXPIRED
+
+
+class RefreshTokenResult(MyResultModel):
+    class _Error(str, Enum):
+        UNKNOWN = 'UNKNOWN'
+        CLIENT_NOT_FOUND = 'CLIENT_NOT_FOUND'
+        INVALID_CODE = 'INVALID_CODE'
+        EXPIRED = 'EXPIRED'
+
+    class _Data(BaseModel):
+        refresh_token: str
+        access_token: str
+
+    error: Optional[_Error]
+    data: Optional[_Data]
