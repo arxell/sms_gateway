@@ -12,7 +12,7 @@ from .datamodels import CheckTokenRequest, CheckTokenResponse
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
-errors = {HTTPStatus.UNAUTHORIZED: {"model": CheckTokenResponse._InvalidToken}}
+errors = {HTTPStatus.UNAUTHORIZED.value: {"model": CheckTokenResponse._InvalidToken}}
 
 
 @router.post('/token/check', response_model=CheckTokenResponse, responses=errors)
