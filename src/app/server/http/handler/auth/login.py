@@ -31,4 +31,6 @@ async def login(request: LoginRequest) -> LoginResponse:
         else:
             return get_error(errors, HTTPStatus.INTERNAL_SERVER_ERROR)
     else:
-        return LoginResponse(token=check_code_result.data.token)
+        return LoginResponse(
+            refresh_token=check_code_result.data.refresh_token, access_token=check_code_result.data.access_token
+        )

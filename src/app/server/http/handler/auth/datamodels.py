@@ -23,7 +23,8 @@ class LoginResponse(BaseModel):
     class _WrongPassword(BaseModel):
         code: str = 'wrong_password'
 
-    token: str
+    refresh_token: str
+    access_token: str
 
 
 # check
@@ -34,5 +35,8 @@ class CheckTokenRequest(BaseModel):
 class CheckTokenResponse(BaseModel):
     class _InvalidToken(BaseModel):
         code: str = 'invalid_token'
+
+    class _TokenExpired(BaseModel):
+        code: str = 'token_expired'
 
     username: str

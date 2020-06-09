@@ -10,13 +10,20 @@ from .datamodels import CheckTokenRequest, CheckTokenResponse
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-errors = {HTTPStatus.UNAUTHORIZED.value: {"model": CheckTokenResponse._InvalidToken}}
+errors = {
+    HTTPStatus.BAD_REQUEST.value: {"model": CheckTokenResponse._InvalidToken},
+    HTTPStatus.UNAUTHORIZED.value: {"model": CheckTokenResponse._TokenExpired},
+}
 
 
 @router.post('/token/check', response_model=CheckTokenResponse, responses=errors)
 async def check_token(request: CheckTokenRequest) -> CheckTokenResponse:
     logger.info(request)
-    payload, error = AuthService.get_payload(request.token)
-    if error:
-        return get_error(errors, HTTPStatus.UNAUTHORIZED)
-    return CheckTokenResponse(username=payload.username)
+    check_token_result = AuthService.check_token(request.token)
+    if check_token_result.is_error:
+        if check_token_result.is_error_expired:
+            return get_error(errors, HTTPStatus.UNAUTHORIZED)
+        else:
+            return get_error(errors, HTTPStatus.BAD_REQUEST)
+
+    return CheckTokenResponse(username=check_token_result.jwt_payload.username)

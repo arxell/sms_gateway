@@ -73,6 +73,8 @@ class Settings(BaseSettings):
 
     # jwt
     jwt_secret: str = Field(None, env='JWT_SECRET')
+    refresh_token_lifetime_in_days: int = Field(30, env='REFRESH_TOKEN_LIFETIME_IN_DAYS')
+    access_token_lifetime_in_secs: int = Field(1, env='ACCESS_TOKEN_LIFETIME_IN_SECS')
     code_length: int = Field(4, env='SMS_CODE_LENGTH')
     jwt_algorithm = str = Field('HS256', env='JWT_ALGORITHM')
 

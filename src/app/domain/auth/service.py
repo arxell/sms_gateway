@@ -1,18 +1,20 @@
+import datetime as dt
 import logging
 import random
-from typing import Optional, Tuple
+from typing import Optional
 
 import jwt
+import jwt.exceptions
 from passlib.context import CryptContext
 from sqlalchemy import desc
 
 from app.conf.settings import settings
-from app.constants import Status
+from app.constants import Status, TokenType
 from app.database.base import connection_context
 from app.database.models import Client, ClientTable, SmsMessage, SmsMessageTable
 from app.domain.sms.service import SendSmsService
 
-from .datamodels import CheckCodeResult, JWTPayload, SendCodeResult
+from .datamodels import CheckCodeResult, CheckTokenResult, JWTPayload, SendCodeResult
 
 logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -54,15 +56,16 @@ class AuthService:
             return result
 
     @classmethod
-    def get_payload(cls, token: str) -> Tuple[Optional[JWTPayload], bool]:
+    def check_token(cls, token: str) -> CheckTokenResult:
         try:
             raw_payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
-            payload = JWTPayload(**raw_payload)
+            jwt_payload = JWTPayload(**raw_payload)
+        except jwt.exceptions.ExpiredSignatureError:
+            return CheckTokenResult(status=Status.ERROR, error=CheckTokenResult._Error.EXPIRED)
         except Exception:
             logger.exception('jwt unknown error')
-            return None, True
-        else:
-            return payload, False
+            return CheckTokenResult(status=Status.ERROR, error=CheckTokenResult._Error.UNKNOWN)
+        return CheckTokenResult(status=Status.OK, jwt_payload=jwt_payload)
 
     @classmethod
     async def _send_code(cls, username: str) -> SendCodeResult:
@@ -97,6 +100,32 @@ class AuthService:
         return SendCodeResult(status=Status.OK, data=SendCodeResult._Data(client_id=client.id, msg_id=msg.id))
 
     @classmethod
+    def _get_refresh_token(cls, username: str) -> Optional[str]:
+        # generate refresh token
+        exp = dt.datetime.utcnow() + dt.timedelta(days=settings.refresh_token_lifetime_in_days)
+        jwt_payload = JWTPayload(username=username, type=TokenType.REFRESH, exp=exp)
+        try:
+            token = jwt.encode(jwt_payload.dict(), settings.jwt_secret, algorithm=settings.jwt_algorithm)
+        except Exception:
+            logger.exception('jwt unknown error')
+            return None
+        else:
+            return token.decode('utf8')
+
+    @classmethod
+    def _get_access_token(cls, username: str) -> Optional[str]:
+        # generate access token
+        exp = dt.datetime.utcnow() + dt.timedelta(seconds=settings.access_token_lifetime_in_secs)
+        jwt_payload = JWTPayload(username=username, type=TokenType.ACCESS, exp=exp)
+        try:
+            token = jwt.encode(jwt_payload.dict(), settings.jwt_secret, algorithm=settings.jwt_algorithm)
+        except Exception:
+            logger.exception('jwt unknown error')
+            return None
+        else:
+            return token.decode('utf8')
+
+    @classmethod
     async def _check_code(cls, username: str, password: str) -> CheckCodeResult:
         async with connection_context() as conn:
             # get  client
@@ -120,11 +149,11 @@ class AuthService:
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.INVALID_CODE)
 
             # generate token
-            jwt_payload = JWTPayload(username=username)
-            try:
-                token = jwt.encode(jwt_payload.dict(), settings.jwt_secret, algorithm=settings.jwt_algorithm)
-            except Exception:
-                logger.exception('jwt unknown error')
+            refresh_token = cls._get_refresh_token(username)
+            access_token = cls._get_access_token(username)
+            if not refresh_token or not access_token:
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.UNKNOWN)
 
-        return CheckCodeResult(status=Status.OK, data=CheckCodeResult._Data(token=token.decode('utf8')))
+        return CheckCodeResult(
+            status=Status.OK, data=CheckCodeResult._Data(refresh_token=refresh_token, access_token=access_token)
+        )
