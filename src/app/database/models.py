@@ -33,3 +33,4 @@ class Client(ModelBase):
 
 
 ClientTable = Client.__table__
+SmsMessageTable = SmsMessage.__table__

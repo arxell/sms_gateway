@@ -1,10 +1,9 @@
 import logging
 from http import HTTPStatus
 
-import jwt
 from fastapi import APIRouter
 
-from app.conf.sentry import settings
+from app.domain.auth.service import AuthService
 from app.server.http.core import get_error
 
 from .datamodels import LoginRequest, LoginResponse
@@ -18,25 +17,20 @@ errors = {
 }
 
 
-@router.post('/client/login', response_model=LoginRequest, responses=errors)
+@router.post('/client/login', response_model=LoginResponse, responses=errors)
 async def login(request: LoginRequest) -> LoginResponse:
     logger.info(request)
 
-    if False:
-        # check client_id in db
-        return get_error(errors, HTTPStatus.NOT_FOUND)
-
-    if False:
-        # check log/pass in db
-        return get_error(errors, HTTPStatus.UNAUTHORIZED)
-
-    try:
-        token = jwt.encode({'client_id': request.client_id}, settings.jwt_sectet, algorithm='HS256')
-    except Exception:
-        logger.exception('jwt unknown error')
-        return get_error(errors, HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    return LoginResponse(token=token)
+    check_code_result = await AuthService.check_code(request.client_id, request.password)
+    if check_code_result.is_error:
+        if check_code_result.error == check_code_result._Error.CLIENT_NOT_FOUND:
+            return get_error(errors, HTTPStatus.NOT_FOUND)
+        elif check_code_result.error == check_code_result._Error.INVALID_CODE:
+            return get_error(errors, HTTPStatus.UNAUTHORIZED)
+        else:
+            return get_error(errors, HTTPStatus.INTERNAL_SERVER_ERROR)
+    else:
+        return LoginResponse(token=check_code_result.data.token)
 
 
 @router.post('/client/logout')

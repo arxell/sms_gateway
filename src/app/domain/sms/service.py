@@ -20,7 +20,8 @@ class SendSmsService:
     async def send(cls, phone: str, text: str) -> SendSmsServiceResult:
         sms_provider_name = random.choice(list(SmsProvider))
         try:
-            _id = await SMS_PROVIDER_MAP[sms_provider_name].send(phone, text)
+            _id = '1234'
+            # await SMS_PROVIDER_MAP[sms_provider_name].send(phone, text)
         except Exception:
             return SendSmsServiceResult(status=Status.ERROR, error=_Error.UNKNOWN)
         else:

@@ -8,7 +8,7 @@ class RegisterRequest(BaseModel):
 
 class RegisterResponse(BaseModel):
     class _Unknown(BaseModel):
-        unknown: str = 'unknown'
+        code: str = 'unknown'
 
     status: str = 'OK'
 
