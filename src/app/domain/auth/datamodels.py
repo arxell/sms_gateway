@@ -38,6 +38,7 @@ class CheckCodeResult(MyResultModel):
         UNKNOWN = 'UNKNOWN'
         CLIENT_NOT_FOUND = 'CLIENT_NOT_FOUND'
         SMS_MESSAGE_NOT_FOUND = 'SMS_MESSAGE_NOT_FOUND'
+        CODE_WAS_USED = 'CODE_WAS_USED'
         INVALID_CODE = 'INVALID_CODE'
 
     class _Data(BaseModel):

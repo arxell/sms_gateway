@@ -23,6 +23,9 @@ class LoginResponse(BaseModel):
     class _WrongPassword(BaseModel):
         code: str = 'wrong_password'
 
+    class _CodeWasUsed(BaseModel):
+        code: str = 'code_was_used'
+
     refresh_token: str
     access_token: str
 

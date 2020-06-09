@@ -15,6 +15,7 @@ class SmsMessage(ModelBase):
     provider_message_id = Column(String, nullable=False)
     code = Column(String, nullable=False)
     client_id = Column(Integer, index=True)
+    used_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=dt.datetime.utcnow, nullable=False)
 
     def __str__(self) -> str:

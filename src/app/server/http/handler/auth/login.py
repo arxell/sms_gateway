@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 errors = {
     HTTPStatus.UNAUTHORIZED.value: {"model": LoginResponse._WrongPassword},
+    HTTPStatus.NOT_ACCEPTABLE.value: {"model": LoginResponse._CodeWasUsed},
     HTTPStatus.NOT_FOUND.value: {"model": LoginResponse._ClientNotFound},
     HTTPStatus.INTERNAL_SERVER_ERROR.value: {"model": Unknown},
 }
@@ -26,6 +27,8 @@ async def login(request: LoginRequest) -> LoginResponse:
     if check_code_result.is_error:
         if check_code_result.error == check_code_result._Error.CLIENT_NOT_FOUND:
             return get_error(errors, HTTPStatus.NOT_FOUND)
+        elif check_code_result.error == check_code_result._Error.CODE_WAS_USED:
+            return get_error(errors, HTTPStatus.NOT_ACCEPTABLE)
         elif check_code_result.error == check_code_result._Error.INVALID_CODE:
             return get_error(errors, HTTPStatus.UNAUTHORIZED)
         else:

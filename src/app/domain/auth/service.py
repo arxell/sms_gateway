@@ -145,6 +145,8 @@ class AuthService:
             sms_message = await result.fetchone()
             if not sms_message:
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.SMS_MESSAGE_NOT_FOUND)
+            if sms_message.used_at:
+                return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.CODE_WAS_USED)
             if not cls.verify_password(password, sms_message.code):
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.INVALID_CODE)
 
@@ -153,6 +155,13 @@ class AuthService:
             access_token = cls._get_access_token(username)
             if not refresh_token or not access_token:
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.UNKNOWN)
+
+            query = (
+                SmsMessageTable.update()
+                .values(used_at=dt.datetime.utcnow())
+                .where(SmsMessageTable.c.id == sms_message.id)
+            )
+            await conn.execute(query)
 
         return CheckCodeResult(
             status=Status.OK, data=CheckCodeResult._Data(refresh_token=refresh_token, access_token=access_token)
