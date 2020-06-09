@@ -9,7 +9,6 @@ from app.database.base import check_db_connection
 from .datamodels import ReadyResponse, VersionResponse
 
 router = APIRouter()
-
 logger = logging.getLogger(__name__)
 
 

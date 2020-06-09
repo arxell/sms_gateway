@@ -96,7 +96,7 @@ class AuthService:
 
             # generate token
             try:
-                token = jwt.encode({'phone': phone}, settings.jwt_sectet, algorithm='HS256')
+                token = jwt.encode({'phone': phone}, settings.jwt_sectet, algorithm=settings.jwt_algorithm)
             except Exception:
                 logger.exception('jwt unknown error')
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.UNKNOWN)

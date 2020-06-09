@@ -74,6 +74,7 @@ class Settings(BaseSettings):
     # jwt
     jwt_sectet: str = Field(None, env='JWT_SECRET')
     code_length: int = Field(4, env='SMS_CODE_LENGTH')
+    jwt_algorithm = str = Field('HS256', env='JWT_ALGORITHM')
 
     # db
     db: DB = DB()

@@ -10,7 +10,6 @@ from app.server.http.core import get_error
 from .datamodels import CheckTokenRequest, CheckTokenResponse
 
 router = APIRouter()
-
 logger = logging.getLogger(__name__)
 errors = {HTTPStatus.UNAUTHORIZED.value: {"model": CheckTokenResponse._InvalidToken}}
 
@@ -19,7 +18,7 @@ errors = {HTTPStatus.UNAUTHORIZED.value: {"model": CheckTokenResponse._InvalidTo
 async def check_token(request: CheckTokenRequest) -> CheckTokenResponse:
     logger.info(request)
     try:
-        jwt.decode(request.token, settings.jwt_sectet, algorithms=['HS256'])
+        jwt.decode(request.token, settings.jwt_sectet, algorithms=[settings.jwt_algorithm])
     except Exception:
         logger.exception('jwt unknown error')
         return get_error(errors, HTTPStatus.UNAUTHORIZED)
