@@ -1,10 +1,9 @@
 import logging
 from http import HTTPStatus
 
-import jwt
 from fastapi import APIRouter
 
-from app.conf.sentry import settings
+from app.domain.auth.service import AuthService
 from app.server.http.core import get_error
 
 from .datamodels import CheckTokenRequest, CheckTokenResponse
@@ -17,9 +16,6 @@ errors = {HTTPStatus.UNAUTHORIZED.value: {"model": CheckTokenResponse._InvalidTo
 @router.post('/token/check', response_model=CheckTokenResponse, responses=errors)
 async def check_token(request: CheckTokenRequest) -> CheckTokenResponse:
     logger.info(request)
-    try:
-        jwt.decode(request.token, settings.jwt_sectet, algorithms=[settings.jwt_algorithm])
-    except Exception:
-        logger.exception('jwt unknown error')
+    if not AuthService.check_token(request.token):
         return get_error(errors, HTTPStatus.UNAUTHORIZED)
     return CheckTokenResponse(status='OK')

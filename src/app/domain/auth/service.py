@@ -2,6 +2,7 @@ import logging
 import random
 
 import jwt
+from passlib.context import CryptContext
 from sqlalchemy import desc
 
 from app.conf.settings import settings
@@ -13,9 +14,20 @@ from app.domain.sms.service import SendSmsService
 from .datamodels import CheckCodeResult, SendCodeResult
 
 logger = logging.getLogger(__name__)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class AuthService:
+    @classmethod
+    def verify_password(cls, plain_password: str, hashed_password: str) -> bool:
+        is_ok: bool = pwd_context.verify(plain_password, hashed_password)
+        return is_ok
+
+    @classmethod
+    def get_password_hash(cls, password: str) -> str:
+        password_hash: str = pwd_context.hash(password)
+        return password_hash
+
     @classmethod
     def generate_random_code(cls) -> str:
         return ''.join(random.choice('0123456789') for _ in range(settings.code_length))
@@ -41,10 +53,21 @@ class AuthService:
             return result
 
     @classmethod
+    def check_token(cls, token: str) -> bool:
+        try:
+            jwt.decode(token, settings.jwt_sectet, algorithms=[settings.jwt_algorithm])
+        except Exception:
+            logger.exception('jwt unknown error')
+            return False
+        else:
+            return True
+
+    @classmethod
     async def _send_code(cls, phone: str) -> SendCodeResult:
         async with connection_context() as conn:
             # send sms
             code = cls.generate_random_code()
+            logger.info(f'code: {code}')
             send_sms_result = await SendSmsService.send(phone, code)
             if send_sms_result.is_error:
                 return SendCodeResult(status=Status.ERROR, error=SendCodeResult._Error.CANT_SEND_SMS)
@@ -63,7 +86,7 @@ class AuthService:
             msg = SmsMessage(
                 provider_name=send_sms_result.data.provider_name,
                 provider_message_id=send_sms_result.data.provider_msg_id,
-                code=code,
+                code=cls.get_password_hash(code),
                 client_id=client.id,
             )
             await msg.save(conn)
@@ -91,7 +114,7 @@ class AuthService:
             sms_message = await result.fetchone()
             if not sms_message:
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.SMS_MESSAGE_FOUND)
-            if sms_message.code != password:
+            if not cls.verify_password(password, sms_message.code):
                 return CheckCodeResult(status=Status.ERROR, error=CheckCodeResult._Error.INVALID_CODE)
 
             # generate token
