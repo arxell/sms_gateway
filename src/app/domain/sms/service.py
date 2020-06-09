@@ -1,11 +1,10 @@
-import asyncio
 import logging
 import random
 
 from app.client import iqsms_client, smsc_client, stream_telecom_client
-from app.constants import SmsProvider
-from app.database.base import connection_context
-from app.database.models import SmsMessage
+from app.constants import SmsProvider, Status
+
+from .datamodels import SendSmsServiceResult, _Data, _Error
 
 SMS_PROVIDER_MAP = {
     SmsProvider.IQSMS: iqsms_client,
@@ -18,16 +17,13 @@ logger = logging.getLogger(__name__)
 
 class SendSmsService:
     @classmethod
-    async def send(cls, phone: str, text: str) -> str:
+    async def send(cls, phone: str, text: str) -> SendSmsServiceResult:
         sms_provider_name = random.choice(list(SmsProvider))
-        delay = random.randint(100, 300) / 1000
-        await asyncio.sleep(delay)
-        # _id = await SMS_PROVIDER_MAP[sms_provider_name].send(phone, text)
-        _id = '123'
-
-        async with connection_context() as conn:
-            msg = SmsMessage(provider_name=sms_provider_name, provider_message_id=_id)
-            await msg.save(conn)
-            await msg.refresh(conn)
-            logger.info(msg)
-        return _id
+        try:
+            _id = await SMS_PROVIDER_MAP[sms_provider_name].send(phone, text)
+        except Exception:
+            return SendSmsServiceResult(status=Status.ERROR, error=_Error.UNKNOWN)
+        else:
+            return SendSmsServiceResult(
+                status=Status.OK, data=_Data(provider_name=sms_provider_name, provider_msg_id=_id)
+            )

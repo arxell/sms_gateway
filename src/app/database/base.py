@@ -1,10 +1,9 @@
-# type: ignore
 import copy
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from functools import wraps
 from logging import getLogger
-from typing import Tuple
+from typing import Dict, Tuple
 
 from aiopg.sa import Engine, SAConnection, create_engine
 from psycopg2.extensions import adapt as sqlescape
@@ -22,37 +21,42 @@ from app.conf.settings import settings
 
 logger = getLogger(__name__)
 __db_pool: Engine = None
-context_conn: ContextVar = ContextVar('async_connection')
+context_conn: ContextVar = ContextVar('async_connection')  # type: ignore
 
 
 class BaseModelClass:
-    def _get_pk_field(self):
+    def _get_pk_field(self):  # type: ignore
+
         for field_name, field in self.__mapper__.columns.items():
             if field.primary_key:
                 return field_name, field
 
     @property
-    def _pk(self):
+    def _pk(self):  # type: ignore
+
         key, _ = self._get_pk_field()
         return getattr(self, key)
 
     @_pk.setter
-    def _pk(self, value):
+    def _pk(self, value):  # type: ignore
+
         key, _ = self._get_pk_field()
         setattr(self, key, value)
 
-    def to_dict(self):
+    def to_dict(self):  # type: ignore
+
         values = copy.deepcopy(self.__dict__)
         if DEFAULT_STATE_ATTR in values:
             del values[DEFAULT_STATE_ATTR]
         return values
 
     @hybrid_property
-    def query(self):
+    def query(self):  # type: ignore
+
         return AsyncQuery(self)
 
     @classmethod
-    async def bulk_insert(cls, connection, values_list):
+    async def bulk_insert(cls, connection, values_list):  # type: ignore
 
         result = await connection.execute(cls.__table__.insert().values(values_list))
         try:
@@ -61,7 +65,8 @@ class BaseModelClass:
         finally:
             result.close()
 
-    def _prepare_saving(self, only_fields=None, exclude_fields=None, force_insert=False):
+    def _prepare_saving(self, only_fields=None, exclude_fields=None, force_insert=False):  # type: ignore
+
         """
         Returns primary key field and values, which need to be saved
         """
@@ -79,21 +84,25 @@ class BaseModelClass:
                 values.pop(pk_field_name)
         return pk_field, values
 
-    def delete_sync(self, connection):
+    def delete_sync(self, connection):  # type: ignore
+
         _, pk_field = self._get_pk_field()
         connection.execute(self.__table__.delete().where(pk_field == self._pk))
 
-    async def delete(self, connection):
+    async def delete(self, connection):  # type: ignore
+
         _, pk_field = self._get_pk_field()
         cursor = await connection.execute(self.__table__.delete().where(pk_field == self._pk))
         cursor.close()
 
-    def save_sync(self, connection, only_fields=None, exclude_fields=None, force_insert=False):
+    def save_sync(self, connection, only_fields=None, exclude_fields=None, force_insert=False):  # type: ignore
+
         pk_field, values = self._prepare_saving(
             only_fields=only_fields, exclude_fields=exclude_fields, force_insert=force_insert
         )
 
-        def _execute(query, values):
+        def _execute(query, values):  # type: ignore
+
             result = connection.execute(query.values(**values).returning(pk_field))
             if result.returns_rows:
                 _id = result.scalar()
@@ -112,24 +121,28 @@ class BaseModelClass:
             result = _execute(self.__table__.update().where(pk_field == self._pk), values)
         return result
 
-    async def refresh(self, connection):
+    async def refresh(self, connection):  # type: ignore
+
         _, pk_field = self._get_pk_field()
         res = dict(await fetchone(connection, self.__table__.select().where(pk_field == self._pk).limit(1)))
         for key, value in res.items():
             setattr(self, key, value)
 
-    def refresh_sync(self, connection):
+    def refresh_sync(self, connection):  # type: ignore
+
         _, pk_field = self._get_pk_field()
         res = dict(connection.execute(self.__table__.select().where(pk_field == self._pk).limit(1)).fetchone())
         for key, value in res.items():
             setattr(self, key, value)
 
-    async def save(self, connection, only_fields=None, exclude_fields=None, force_insert=False):
+    async def save(self, connection, only_fields=None, exclude_fields=None, force_insert=False):  # type: ignore
+
         pk_field, values = self._prepare_saving(
             only_fields=only_fields, exclude_fields=exclude_fields, force_insert=force_insert
         )
 
-        async def _execute(query, values):
+        async def _execute(query, values):  # type: ignore
+
             cursor = await connection.execute(query.values(**values).returning(pk_field))
             try:
                 if cursor.returns_rows:
@@ -155,7 +168,8 @@ class BaseModelClass:
                 cursor.close()
         return False
 
-    async def upsert(self, connection, constraint_column=None):
+    async def upsert(self, connection, constraint_column=None):  # type: ignore
+
         if constraint_column not in [column.name for column in self.__table__.c]:
             raise Exception(f'Invalid constraint_column {constraint_column}')
 
@@ -184,15 +198,17 @@ class BaseModelClass:
             cursor.close()
 
 
-def _check_conn(meth):
+def _check_conn(meth):  # type: ignore
     @wraps(meth)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self, *args, **kwargs):  # type: ignore
+
         if self._async_conn is None and self._sync_conn is None and not self._auto_connection:
             raise ValueError('connection for query not specified')
         elif self._auto_connection:
 
             @asynccontextmanager
-            async def context():
+            async def context():  # type: ignore
+
                 async with connection_context() as conn:
                     self._async_conn = conn
                     yield
@@ -201,33 +217,38 @@ def _check_conn(meth):
         else:
 
             @asynccontextmanager
-            async def context():  # dummy context
+            async def context():  # type: ignore
                 yield
 
         async with context():
+
             return await meth(self, *args, **kwargs)
 
     return wrapper
 
 
 class AsyncQuery(orm.Query):
-    def __init__(self, entities, session=None):
+    def __init__(self, entities, session=None):  # type: ignore
+
         self._sync_conn = self._async_conn = None
         self._auto_connection = False
         super().__init__(entities, session)
 
     @_generative()
-    def with_async_conn(self, conn):
+    def with_async_conn(self, conn):  # type: ignore
+
         self._async_conn = conn
         self._sync_conn = None
 
     @_generative()
-    def with_sync_conn(self, conn):
+    def with_sync_conn(self, conn):  # type: ignore
+
         self._sync_conn = conn
         self._async_conn = None
 
     @_generative()
-    def auto_connection(self):
+    def auto_connection(self):  # type: ignore
+
         """
         Allows not to specify connection manually.
         If uses in `app.models.bases.connection_context`, connection from that context will be used
@@ -236,7 +257,8 @@ class AsyncQuery(orm.Query):
         self._auto_connection = True
 
     @_check_conn
-    async def all(self):
+    async def all(self):  # type: ignore
+
         if self._async_conn is not None:
             raw_result = await fetchall(self._async_conn, self.statement)
         elif self._sync_conn is not None:
@@ -245,14 +267,16 @@ class AsyncQuery(orm.Query):
         return [cls_(**row) for row in raw_result]
 
     @_check_conn
-    async def scalar(self):
+    async def scalar(self):  # type: ignore
+
         if self._async_conn is not None:
             return await scalar(self._async_conn, self.statement)
         elif self._sync_conn is not None:
             return self._sync_conn.scalar(self.statement)
 
     @_check_conn
-    async def count(self):
+    async def count(self):  # type: ignore
+
         query = select([func.count('*')]).select_from(alias(self.statement))
         if self._async_conn is not None:
             return await scalar(self._async_conn, query)
@@ -260,7 +284,8 @@ class AsyncQuery(orm.Query):
             return self._sync_conn.scalar(query)
 
     @_check_conn
-    async def first(self):
+    async def first(self):  # type: ignore
+
         if self._async_conn is not None:
             raw_result = await first(self._async_conn, self.statement)
         elif self._sync_conn is not None:
@@ -269,7 +294,8 @@ class AsyncQuery(orm.Query):
             return self._entity_zero().class_(**raw_result)
 
     @_check_conn
-    async def update(self, values):
+    async def update(self, values):  # type: ignore
+
         if len(self._entities) != 1 and len(self._entities[0].entities) != 1:
             raise ValueError('only one model supported')
         table = self._entities[0].entities[0].__table__
@@ -282,7 +308,8 @@ class AsyncQuery(orm.Query):
         return res.rowcount
 
     @_check_conn
-    async def get(self, obj_id):
+    async def get(self, obj_id):  # type: ignore
+
         obj_class = self._entity_zero().class_
         obj = await self.filter(obj_class.id == obj_id).first()
         if obj is None:
@@ -290,14 +317,16 @@ class AsyncQuery(orm.Query):
         return obj
 
     @_check_conn
-    async def one(self):
+    async def one(self):  # type: ignore
+
         result = await self.first()
         if result is None:
             raise NoResultFound("No row was found for one()")
         return result
 
     @_check_conn
-    async def delete(self):
+    async def delete(self):  # type: ignore
+
         if len(self._entities) != 1 and len(self._entities[0].entities) != 1:
             raise ValueError('only one model supported')
         table = self._entities[0].entities[0].__table__
@@ -310,7 +339,8 @@ class AsyncQuery(orm.Query):
         return res.rowcount
 
 
-def compile_query(query):
+def compile_query(query):  # type: ignore
+
     dialect = postgresql.dialect()
     compiled_query = query.compile(dialect=dialect)
 
@@ -324,7 +354,8 @@ def compile_query(query):
     return compiled_query.string % params
 
 
-async def _fetch(conn: SAConnection, query: ClauseElement, meth: str):
+async def _fetch(conn: SAConnection, query: ClauseElement, meth: str):  # type: ignore
+
     if isinstance(query, AsyncQuery):
         query = query.statement
     res = await conn.execute(query)
@@ -332,24 +363,29 @@ async def _fetch(conn: SAConnection, query: ClauseElement, meth: str):
         return await getattr(res, meth)()
 
 
-async def first(conn: SAConnection, query: ClauseElement):
+async def first(conn: SAConnection, query: ClauseElement):  # type: ignore
+
     return await _fetch(conn, query, 'first')
 
 
-async def fetchall(conn: SAConnection, query: ClauseElement):
+async def fetchall(conn: SAConnection, query: ClauseElement):  # type: ignore
+
     return await _fetch(conn, query, 'fetchall')
 
 
-async def fetchone(conn: SAConnection, query: ClauseElement):
+async def fetchone(conn: SAConnection, query: ClauseElement):  # type: ignore
+
     return await _fetch(conn, query, 'fetchone')
 
 
-async def scalar(conn: SAConnection, query: ClauseElement):
+async def scalar(conn: SAConnection, query: ClauseElement):  # type: ignore
+
     return await _fetch(conn, query, 'scalar')
 
 
 @asynccontextmanager
-async def connection_context():
+async def connection_context():  # type: ignore
+
     """
     Acquires connection from pool, releases it on exit from context.
 
@@ -378,10 +414,11 @@ async def connection_context():
 
 
 class PoolAlreadyInitialized(Exception):
+
     pass
 
 
-def get_connection_config():
+def get_connection_config() -> Dict[str, str]:
     return dict(
         host=settings.db.host,
         port=settings.db.port,
@@ -395,7 +432,8 @@ def get_connection_url() -> URL:
     return URL('postgres', **get_connection_config())
 
 
-async def init_db():
+async def init_db():  # type: ignore
+
     global __db_pool
     if __db_pool is not None:
         raise PoolAlreadyInitialized('database already initialized')
@@ -411,7 +449,8 @@ async def init_db():
     return __db_pool
 
 
-async def close_db():
+async def close_db():  # type: ignore
+
     global __db_pool
     if __db_pool is not None:
         __db_pool.close()
@@ -430,7 +469,8 @@ async def check_db_connection() -> Tuple[bool, str]:
             await conn.execute('select 1;')
     except Exception as exp:
         logger.exception('unknown connection error')
-        return False, exp.__str__
+        return False, exp.__str__  # type: ignore
+
     else:
         return True, ''
 

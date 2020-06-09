@@ -7,8 +7,8 @@ class RegisterRequest(BaseModel):
 
 
 class RegisterResponse(BaseModel):
-    class _AlreadyExists(BaseModel):
-        already_exists: str = 'already_exists'
+    class _Unknown(BaseModel):
+        unknown: str = 'unknown'
 
     status: str = 'OK'
 

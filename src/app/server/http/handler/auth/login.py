@@ -2,6 +2,7 @@ import logging
 from http import HTTPStatus
 
 import jwt
+from fastapi import APIRouter
 
 from app.conf.sentry import settings
 from app.server.http.core import get_error
@@ -9,6 +10,7 @@ from app.server.http.core import get_error
 from .datamodels import LoginRequest, LoginResponse
 
 logger = logging.getLogger(__name__)
+router = APIRouter()
 errors = {
     HTTPStatus.UNAUTHORIZED.value: {"model": LoginResponse._WrongPassword},
     HTTPStatus.NOT_FOUND.value: {"model": LoginResponse._ClientNotFound},
@@ -16,6 +18,7 @@ errors = {
 }
 
 
+@router.post('/client/login', response_model=LoginRequest, responses=errors)
 async def login(request: LoginRequest) -> LoginResponse:
     logger.info(request)
 
@@ -36,5 +39,6 @@ async def login(request: LoginRequest) -> LoginResponse:
     return LoginResponse(token=token)
 
 
+@router.post('/client/logout')
 async def logout():
     pass
