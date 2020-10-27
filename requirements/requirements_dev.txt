@@ -19,7 +19,7 @@ click==7.1.2
 clikit==0.4.3
 colorama==0.4.3; python_version >= "3.4" and sys_platform == "win32" or sys_platform == "win32"
 coverage==5.1
-cryptography==2.9.2
+cryptography==3.2
 decorator==4.4.2; python_version >= "3.4"
 fastapi==0.55.1
 flake8==3.8.2
