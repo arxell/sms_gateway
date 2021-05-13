@@ -70,7 +70,7 @@ ptyprocess==0.6.0
 py==1.8.1
 pycodestyle==2.6.0
 pycparser==2.20
-pydantic==1.5.1
+pydantic==1.6.2
 pyflakes==2.2.0
 pygments==2.6.1; python_version >= "3.4"
 pyjwt==1.7.1
