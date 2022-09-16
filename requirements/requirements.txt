@@ -20,7 +20,7 @@ httptools==0.1.1; sys_platform != "win32" and sys_platform != "cygwin" and platf
 hyperframe==5.2.0
 idna==2.9
 jwt==1.0.0
-mako==1.1.3
+mako==1.2.2
 markupsafe==1.1.1
 multidict==4.7.6
 prometheus-client==0.8.0
